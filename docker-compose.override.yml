@@ -1,0 +1,15 @@
+# Développement (chargé automatiquement par « docker compose ») : sources montées, Vite HMR, redémarrage du
+# serveur à chaque modification de server/. Aucune compilation nécessaire.
+# Production (Cloudflare) : ignorer ce fichier avec COMPOSE_FILE=docker-compose.yml dans .env.
+services:
+  app:
+    build:
+      target: dev
+    image: pool-app:dev
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./server:/app/server
+      - ./web:/app/web
+    read_only: false   # Vite écrit son cache dans node_modules/.vite
+    mem_limit: 768m

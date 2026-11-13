@@ -1,0 +1,53 @@
+# Sondages « meilleure phrase »
+#   docker compose up -d --build    → http://localhost:8900 (admin : /admin)
+#     Développement par défaut (docker-compose.override.yml) : Vite HMR, aucune compilation.
+#     Production : COMPOSE_FILE=docker-compose.yml dans .env (frontend compilé, image en lecture seule).
+#   Profil « public » (COMPOSE_PROFILES=public dans .env) : tunnel Cloudflare vers votre domaine
+#     Configuration et identifiants du tunnel dans deploy/cloudflared/ (hors Git, voir README).
+# Données : ./data/polls/<sondage>/poll.json et ./data/polls/<sondage>/people/<personne>.json
+
+services:
+  app:
+    build:
+      context: .
+      target: prod
+    image: pool-app:latest
+    restart: unless-stopped
+    init: true
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: 8900
+      DATA_DIR: /app/data
+    ports:
+      - "127.0.0.1:8900:8900"
+    volumes:
+      - ./data:/app/data
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"   # fichiers JSON lisibles et modifiables depuis l'hôte
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,noexec,nosuid,nodev
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # Tunnel Cloudflare : connexion sortante seulement, aucun port ouvert. Publie http://app:8900.
+  tunnel:
+    profiles: [public]
+    image: cloudflare/cloudflared:2026.10.3
+    restart: unless-stopped
+    depends_on: [app]
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./deploy/cloudflared:/etc/cloudflared:ro
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"   # seul à pouvoir lire les identifiants (mode 600)
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m

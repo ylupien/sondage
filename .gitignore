@@ -1,0 +1,22 @@
+# Dépendances et compilation
+node_modules/
+dist/
+
+# Données des sondages (noms, courriels, jetons, votes)
+data/
+
+# Secrets : mots de passe, clé Resend, identifiants du tunnel Cloudflare
+.env
+.env.*
+!.env.example
+deploy/cloudflared/*
+!deploy/cloudflared/config.example.yml
+
+# Sources graphiques et archives locales
+images/
+
+# Divers
+*.log
+.DS_Store
+.vscode/
+.idea/
