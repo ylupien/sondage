@@ -3,7 +3,8 @@ node_modules/
 dist/
 
 # Données des sondages (noms, courriels, jetons, votes)
-data/
+data/*
+!data/.gitkeep
 
 # Secrets : mots de passe, clé Resend, identifiants du tunnel Cloudflare
 .env
